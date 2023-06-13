@@ -2,6 +2,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+
+#include <errno.h>
 
 #include "std_core.h"
 
@@ -61,6 +64,9 @@ static inline kk_integer_t kk_close_wrapper(kk_integer_t fd, kk_context_t* _ctx)
     return result;
 }*/
 
+/*
+    This is aboslutely terrible, but I will change it once there is good documentation on how to create tuples or lists in the C API for Koka.
+*/
 static inline kk_integer_t kk_pipe_wrapper(kk_context_t* _ctx) {
     int pipefds_arr[2];
     int ret = pipe(pipefds_arr);
@@ -87,6 +93,28 @@ static inline kk_integer_t kk_write_wrapper_vec(kk_integer_t fd, kk_vector_t vec
     return kk_integer_from_small(write(val, kk_vector_buf_borrow(vec, &vec_length), len));
 }
 
+/*
+    This should return a tuple of (bytes_read, string)
+    However, I don't know how to create a tuple in the C API for Koka.
+*/
+static inline kk_string_t kk_read_wrapper(kk_integer_t fd, kk_integer_t amount, kk_context_t* _ctx) {
+    uint64_t val = (fd.ibox - 1) / 4;
+    uint64_t len = (amount.ibox - 1) / 4;
+    char* buf = malloc(len);
+    int ret = read(val, buf, len);
+    if (ret == -1) {
+        free(buf);
+        return kk_string_alloc_raw("", 1, _ctx);
+    }
+    else if (ret == 0) {
+        free(buf);
+        errno = 0;
+        return kk_string_alloc_raw("", 1, _ctx);
+    }
+    kk_string_t ret_str = kk_string_alloc_raw(buf, ret, _ctx);
+    free(buf);
+    return ret_str;
+}
 
 
 static inline kk_integer_t kk_sleep_wrapper(kk_integer_t secs, kk_context_t* _ctx) {

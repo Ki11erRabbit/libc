@@ -113,6 +113,19 @@ pub fun write(buf : vector<a>, fd : fileDescriptor) : <io-total,blocking,exn|_e>
     else
         Success(res)
 
+
+extern read-wrapper(fd : int, count : int) : string
+    c "kk_read_wrapper"
+
+pub fun read(fd : fileDescriptor, amount : int) : <io-total,blocking,exn|_e> libcResult<string>
+    val res = read-wrapper(fd.int(), amount)
+    if res == "" then
+        match errno()
+            NOERROR -> Success(res)
+            _ -> Failure(errno())
+    else
+        Success(res)
+
 extern fork-wrapper() : int
     c "kk_fork_wrapper"
 
@@ -145,14 +158,25 @@ pub fun sleep(seconds : int) : <exn|_e> libcResult<int>
 
 
 fun main() {
-    
-    val pipe = pipe()
 
-    match pipe
-        Failure(e) -> println("Error: " ++ e.show())
-        Success((fd1, fd2)) -> {
-            println("fd1: " ++ fd1.int().show())
-            println("fd2: " ++ fd2.int().show())
+    val pipe = pipe()
+    val (read_end, write_end) = match pipe 
+        Success(pair) -> pair
+        Failure(errno) -> {
+            println("Error: " ++ errno.show())
+            (STDIN, STDOUT)
         }
+
+    
+    "writing to pipe\n".write(write_end,16)
+
+
+    val str = read(read_end, 16)
+
+    match str
+        Success(str) -> println("read from pipe: " ++ str)
+        Failure(errno) -> println("Error: " ++ errno.show())
+
+   
     
 }

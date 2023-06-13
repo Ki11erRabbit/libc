@@ -8,6 +8,7 @@ extern get-errno() : int
     c "kk_get_errno"
 
 pub type errno
+    NOERROR
     E2BIG
     EACCES
     EADDRINUSE
@@ -138,6 +139,7 @@ pub type errno
 
 pub fun errno() : <exn|_e> errno
     match get-errno()
+        0 -> NOERROR
         1 -> EPERM
         2 -> ENOENT
         3 -> ESRCH
@@ -272,6 +274,7 @@ pub fun errno() : <exn|_e> errno
 
 pub fun show(err : errno) : string {
     match err
+        NOERROR -> "NOERROR: No error"
         E2BIG -> "E2BIG: Argument list too long"
         EACCES -> "EACCES: Permission denied"
         EADDRINUSE -> "EADDRINUSE: Address already in use"
