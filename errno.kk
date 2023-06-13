@@ -404,13 +404,3 @@ pub fun show(err : errno) : string {
         EXFULL -> "EXFULL: Exchange full"
 
 }
-
-pub type libcResult<a>
-    Success(a : a)
-    Failure(errno : errno)
-
-
-pub fun unwrap(res : libcResult<a>) : <exn> a 
-    match res
-        Success(a) -> a
-        Failure(e) -> throw(e.show())

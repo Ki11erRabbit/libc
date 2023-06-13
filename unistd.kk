@@ -1,7 +1,7 @@
 
 module unistd
 
-import errno
+import libc-types
 
 extern import
     c file "unistd-inline.c"
@@ -25,19 +25,6 @@ pub fun alarm(seconds : int) : alarm
 
 extern dup-wrapper(fd : int) : int
     c "kk_dup_wrapper"
-
-pub type fileDescriptor
-    STDIN
-    STDOUT
-    STDERR
-    Other(fd : int)
-
-pub fun int(fd : fileDescriptor) : int
-    match fd 
-        STDIN -> 0
-        STDOUT -> 1
-        STDERR -> 2
-        Other(fd_) -> fd_
 
 pub fun dup(fd : fileDescriptor) : <exn|_e> libcResult<fileDescriptor>
 
@@ -129,9 +116,8 @@ pub fun read(fd : fileDescriptor, amount : int) : <io-total,blocking,exn|_e> lib
 
 pub type fork :: X
 
-pub alias pid = int
 
-type forkResult 
+pub type forkResult 
     Parent(pid : pid)
     Child
 
