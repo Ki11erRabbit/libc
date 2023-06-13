@@ -93,7 +93,9 @@ static inline kk_integer_t kk_write_wrapper_vec(kk_integer_t fd, kk_vector_t vec
     uint64_t len = (length.ibox - 1) / 4;
     kk_ssize_t vec_length;
 
-    return kk_integer_from_small(write(val, kk_vector_buf_borrow(vec, &vec_length), len));
+    kk_integer_t ret = kk_integer_from_small(write(val, kk_vector_buf_borrow(vec, &vec_length), len));
+    kk_vector_drop(vec, _ctx);
+    return ret;
 }
 
 /*
