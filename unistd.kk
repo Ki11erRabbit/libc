@@ -126,14 +126,17 @@ pub fun read(fd : fileDescriptor, amount : int) : <io-total,blocking,exn|_e> lib
     else
         Success(res)
 
-extern fork-wrapper() : int
-    c "kk_fork_wrapper"
 
 pub type fork :: X
 
+pub alias pid = int
+
 type forkResult 
-    Parent(pid : int)
+    Parent(pid : pid)
     Child
+
+extern fork-wrapper() : int
+    c "kk_fork_wrapper"
 
 pub fun fork() : <fork,exn|_e> libcResult<forkResult>
     val pid = fork-wrapper()
@@ -144,7 +147,36 @@ pub fun fork() : <fork,exn|_e> libcResult<forkResult>
     else
         Success(Parent(pid))
 
+pub type exec :: X
 
+extern execv-wrapper(path : string, argv : vector<string>) : int
+    c "kk_execv_wrapper"
+
+pub fun execv(path : string, argv : vector<string>) : <exec,exn|_e> libcResult<int>
+    val res = execv-wrapper(path, argv)
+    if res == -1 then
+        Failure(errno())
+    else
+        Success(res)
+
+pub extern getpid() : pid
+    c "kk_getpid_wrapper"
+
+pub extern getppid() : pid
+    c "kk_getppid_wrapper"
+
+pub extern getpgrp() : pid
+    c "kk_getpgrp_wrapper"
+
+extern getpgid_wrapper(pid : pid) : int
+    c "kk_getpgid_wrapper"
+
+pub fun getpgid(pid : pid) : <exn|_e> libcResult<pid>
+    val res = getpgid_wrapper(pid)
+    if res == -1 then
+        Failure(errno())
+    else
+        Success(res)
 
 extern sleep-wrapper(seconds : int) : int
     c "kk_sleep_wrapper"
@@ -159,26 +191,7 @@ pub fun sleep(seconds : int) : <exn|_e> libcResult<int>
 
 pub fun main() {
 
-    //println("Hello, World!")
-    
+    println("Hello, World!")
 
-    val pipe = pipe()
-    val (read_end, write_end) = match pipe 
-        Success(pair) -> pair
-        Failure(errno) -> {
-            println("Error: " ++ errno.show())
-            (STDIN, STDOUT)
-        }
-
-    
-    "hello world".write(write_end, 16)
-
-    val str = read(read_end, 16)
-
-    match str
-        Success(str) -> println("read from pipe: " ++ str)
-        Failure(errno) -> println("Error: " ++ errno.show())
-
-   
     
 }

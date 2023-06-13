@@ -7,17 +7,11 @@
 
 #include <errno.h>
 
-#include "std_core.h"
-
 
 
 static inline kk_integer_t kk_alarm_wrapper(kk_integer_t seconds, kk_context_t* _ctx) {
     uint64_t val = (seconds.ibox - 1) / 4;
     return kk_integer_from_small(alarm(val));
-}
-
-static inline kk_integer_t kk_fork_wrapper(kk_context_t* _ctx) {
-    return kk_integer_from_small(fork());
 }
 
 static inline kk_integer_t kk_dup_wrapper(kk_integer_t fd, kk_context_t* _ctx) {
@@ -35,35 +29,6 @@ static inline kk_integer_t kk_close_wrapper(kk_integer_t fd, kk_context_t* _ctx)
     uint64_t val = (fd.ibox - 1) / 4;
     return kk_integer_from_small(close(val));
 }
-
-
-/*static inline kk_box_t kk_pipe_wrapper(kk_context_t* _ctx) {
-    int pipefds_arr[2];
-    int ret = pipe(pipefds_arr);
-    /*kk_std_core_types__Tuple3_ pipefds;
-    pipefds.fst = _kk_box_new_value(ret);
-    pipefds.snd = _kk_box_new_value(pipefds_arr[0]);
-    pipefds.thd = _kk_box_new_value(pipefds_arr[1]);
-    //kk_box_t* pipefds_ptr = kk_box_ptr(pipefds);
-    //pipefds_ptr[0] = kk_integer_box(pipefds_arr[0]);
-    //pipefds_ptr[1] = kk_integer_box(pipefds_arr[1]);
-    return kk_std_core_types__new_dash__lp__comma__comma__rp_(_kk_box_new_value(ret),
-                                                              _kk_box_new_value(pipefds_arr[0]),
-                                                              _kk_box_new_value(pipefds_arr[1]),_ctx);
-    //return kk_integer_from_small(ret);
-}*/
-
-/*static inline kk_std_core_list kk_pipe_wrapper(kk_context_t* ctx) {
-    int pipefds_arr[2];
-    int ret = pipe(pipefds_arr);
-
-    kk_std_core__list result;
-    kk_std_core__list read;
-    kk_std_core__list write = kk_std_core_new_Cons(kk_reuse_null, kk_integer_box(kk_integer_from_small(pipefds_arr[1])), kk_std_core__new_Nil(ctx),ctx);
-    read = kk_std_core_new_Cons(kk_reuse_null, kk_integer_box(kk_integer_from_small(pipefds_arr[0])), write,ctx);
-    result = kk_std_core_new_Cons(kk_reuse_null, kk_integer_box(kk_integer_from_small(ret)), read,ctx);
-    return result;
-}*/
 
 /*
     This is aboslutely terrible, but I will change it once there is good documentation on how to create tuples or lists in the C API for Koka.
@@ -122,6 +87,50 @@ static inline kk_string_t kk_read_wrapper(kk_integer_t fd, kk_integer_t amount, 
     free(buf);
     return ret_str;
 }
+
+//
+//  Process management
+//
+
+static inline kk_integer_t kk_fork_wrapper(kk_context_t* _ctx) {
+    return kk_integer_from_small(fork());
+}
+
+
+static inline kk_integer_t kk_execv_wrapper(kk_string_t path, kk_vector_t args, kk_context_t* _ctx) {
+    kk_ssize_t path_length;
+    const char* path_buf = kk_string_cbuf_borrow(path, &path_length);
+    char** args_buf = malloc(sizeof(char*) * (kk_vector_len_borrow(args) + 1));
+    for (kk_ssize_t i = 0; i < kk_vector_len_borrow(args); i++) {
+        kk_box_t arg = kk_vector_at_borrow(args, i);
+        kk_ssize_t arg_length;
+        args_buf[i] = kk_string_cbuf_borrow(kk_string_unbox(arg), &arg_length);
+    }
+    args_buf[kk_vector_len_borrow(args)] = NULL;
+    int ret = execv(path_buf, args_buf);
+    free(args_buf);
+    kk_string_drop(path, _ctx);
+    kk_vector_drop(args, _ctx);
+    return kk_integer_from_small(ret);
+}
+
+static inline kk_integer_t kk_getpid_wrapper(kk_context_t* _ctx) {
+    return kk_integer_from_small(getpid());
+}
+
+static inline kk_integer_t kk_getppid_wrapper(kk_context_t* _ctx) {
+    return kk_integer_from_small(getppid());
+}
+
+static inline kk_integer_t kk_getpgrp_wrapper(kk_context_t* _ctx) {
+    return kk_integer_from_small(getpgrp());
+}
+
+static inline kk_integer_t kk_getpgid_wrapper(kk_integer_t pid, kk_context_t* _ctx) {
+    uint64_t val = (pid.ibox - 1) / 4;
+    return kk_integer_from_small(getpgid(val));
+}
+
 
 
 static inline kk_integer_t kk_sleep_wrapper(kk_integer_t secs, kk_context_t* _ctx) {
