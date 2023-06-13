@@ -157,7 +157,10 @@ pub fun sleep(seconds : int) : <exn|_e> libcResult<int>
         Success(res)
 
 
-fun main() {
+pub fun main() {
+
+    //println("Hello, World!")
+    
 
     val pipe = pipe()
     val (read_end, write_end) = match pipe 
@@ -168,8 +171,7 @@ fun main() {
         }
 
     
-    "writing to pipe\n".write(write_end,16)
-
+    "hello world".write(write_end, 16)
 
     val str = read(read_end, 16)
 

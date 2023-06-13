@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <errno.h>
 
@@ -99,19 +100,20 @@ static inline kk_integer_t kk_write_wrapper_vec(kk_integer_t fd, kk_vector_t vec
 */
 static inline kk_string_t kk_read_wrapper(kk_integer_t fd, kk_integer_t amount, kk_context_t* _ctx) {
     uint64_t val = (fd.ibox - 1) / 4;
-    uint64_t len = (amount.ibox - 1) / 4;
+    uint64_t len = (amount.ibox - 1) / 4 + 1;
     char* buf = malloc(len);
+    memset(buf, 0, len+1);
     int ret = read(val, buf, len);
     if (ret == -1) {
         free(buf);
-        return kk_string_alloc_raw("", 1, _ctx);
+        return kk_string_alloc_raw("", true, _ctx);
     }
     else if (ret == 0) {
         free(buf);
         errno = 0;
-        return kk_string_alloc_raw("", 1, _ctx);
+        return kk_string_alloc_raw("", true, _ctx);
     }
-    kk_string_t ret_str = kk_string_alloc_raw(buf, ret, _ctx);
+    kk_string_t ret_str = kk_string_alloc_raw(buf, false, _ctx);
     free(buf);
     return ret_str;
 }
