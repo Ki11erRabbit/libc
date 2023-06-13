@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdnoreturn.h>
 
 #include <errno.h>
 
@@ -114,6 +115,23 @@ static inline kk_integer_t kk_execv_wrapper(kk_string_t path, kk_vector_t args, 
     return kk_integer_from_small(ret);
 }
 
+static inline kk_integer_t kk_execvp_wrapper(kk_string_t path, kk_vector_t args, kk_context_t* _ctx) {
+    kk_ssize_t path_length;
+    const char* path_buf = kk_string_cbuf_borrow(path, &path_length);
+    char** args_buf = malloc(sizeof(char*) * (kk_vector_len_borrow(args) + 1));
+    for (kk_ssize_t i = 0; i < kk_vector_len_borrow(args); i++) {
+        kk_box_t arg = kk_vector_at_borrow(args, i);
+        kk_ssize_t arg_length;
+        args_buf[i] = kk_string_cbuf_borrow(kk_string_unbox(arg), &arg_length);
+    }
+    args_buf[kk_vector_len_borrow(args)] = NULL;
+    int ret = execvp(path_buf, args_buf);
+    free(args_buf);
+    kk_string_drop(path, _ctx);
+    kk_vector_drop(args, _ctx);
+    return kk_integer_from_small(ret);
+}
+
 static inline kk_integer_t kk_getpid_wrapper(kk_context_t* _ctx) {
     return kk_integer_from_small(getpid());
 }
@@ -131,9 +149,24 @@ static inline kk_integer_t kk_getpgid_wrapper(kk_integer_t pid, kk_context_t* _c
     return kk_integer_from_small(getpgid(val));
 }
 
+static inline kk_integer_t kk_setpgid_wrapper(kk_integer_t pid, kk_integer_t pgid, kk_context_t* _ctx) {
+    uint64_t val1 = (pid.ibox - 1) / 4;
+    uint64_t val2 = (pgid.ibox - 1) / 4;
+    return kk_integer_from_small(setpgid(val1, val2));
+}
+
+static inline kk_integer_t kk_setpgrp_wrapper(kk_context_t* _ctx) {
+    return kk_integer_from_small(setpgrp());
+}
+
 
 
 static inline kk_integer_t kk_sleep_wrapper(kk_integer_t secs, kk_context_t* _ctx) {
     uint64_t val = (secs.ibox - 1) / 4;
     return kk_integer_from_small(sleep(val));
+}
+
+static inline noreturn void kk_exit_wrapper(kk_integer_t status, kk_context_t* _ctx) {
+    uint64_t val = (status.ibox - 1) / 4;
+    _exit(val);
 }

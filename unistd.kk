@@ -159,6 +159,16 @@ pub fun execv(path : string, argv : vector<string>) : <exec,exn|_e> libcResult<i
     else
         Success(res)
 
+extern execvp-wrapper(path : string, argv : vector<string>) : int
+    c "kk_execvp_wrapper"
+
+pub fun execvp(path : string, argv : vector<string>) : <exec,exn|_e> libcResult<int>
+    val res = execvp-wrapper(path, argv)
+    if res == -1 then
+        Failure(errno())
+    else
+        Success(res)
+
 pub extern getpid() : pid
     c "kk_getpid_wrapper"
 
@@ -178,6 +188,26 @@ pub fun getpgid(pid : pid) : <exn|_e> libcResult<pid>
     else
         Success(res)
 
+extern setpgid_wrapper(pid : pid, pgid : pid) : int
+    c "kk_setpgid_wrapper"
+
+pub fun setpgid(pid : pid, pgid : pid) : <exn|_e> libcResult<int>
+    val res = setpgid_wrapper(pid, pgid)
+    if res == -1 then
+        Failure(errno())
+    else
+        Success(res)
+
+extern setpgrp_wrapper() : int
+    c "kk_setpgrp_wrapper"
+
+pub fun setpgrp() : <exn|_e> libcResult<int>
+    val res = setpgrp_wrapper()
+    if res == -1 then
+        Failure(errno())
+    else
+        Success(res)
+
 extern sleep-wrapper(seconds : int) : int
     c "kk_sleep_wrapper"
 
@@ -188,10 +218,13 @@ pub fun sleep(seconds : int) : <exn|_e> libcResult<int>
     else
         Success(res)
 
+pub extern exit_(status : int) : ()
+    c "kk_exit_wrapper"
 
 pub fun main() {
 
-    println("Hello, World!")
 
-    
+    execvp("ls", ["ls", "-l"].vector())
+
+    ()
 }
