@@ -83,7 +83,9 @@ static inline kk_integer_t kk_write_wrapper_str(kk_integer_t fd, kk_string_t str
     uint64_t len = (length.ibox - 1) / 4;
     kk_ssize_t str_length;
 
-    return kk_integer_from_small(write(val, kk_string_cbuf_borrow(str, &str_length), len));
+    kk_integer_t ret = kk_integer_from_small(write(val, kk_string_cbuf_borrow(str, &str_length), len));
+    kk_string_drop(str, _ctx);
+    return ret;
 }
 
 static inline kk_integer_t kk_write_wrapper_vec(kk_integer_t fd, kk_vector_t vec, kk_integer_t length,kk_context_t* _ctx) {
@@ -113,7 +115,8 @@ static inline kk_string_t kk_read_wrapper(kk_integer_t fd, kk_integer_t amount, 
         errno = 0;
         return kk_string_alloc_raw("", true, _ctx);
     }
-    kk_string_t ret_str = kk_string_alloc_raw(buf, false, _ctx);
+
+    kk_string_t ret_str = kk_string_alloc_from_qutf8(buf, _ctx);
     free(buf);
     return ret_str;
 }
