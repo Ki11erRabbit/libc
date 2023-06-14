@@ -178,7 +178,7 @@ pub type fcntlResult
     PipeSize(size : int)
     GetFdSeals(seals : int)
     //GetRwHint(hint : rwHint)
-    Other
+    FcntlSuccess
 
 
 extern fcntl_wrapper_void(fd : int, cmd : int) : int
@@ -195,14 +195,14 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Dup_Fd(fd(res)))
+                return Success(Dup_Fd(libc-types/fd(res)))
         }
         DupCloexecFd(fd2) -> {
             val res : int = fcntl_wrapper_arg(fd.int(), cmd.int(), fd2.int())
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Dup_Fd(fd(res)))
+                return Success(Dup_Fd(libc-types/fd(res)))
         }
         GetFd -> {
             val res = fcntl_wrapper_void(fd.int(), cmd.int())
@@ -216,7 +216,7 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Other)
+                return Success(FcntlSuccess)
         }
         GetFl -> {
             val res = fcntl_wrapper_void(fd.int(), cmd.int())
@@ -230,7 +230,7 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Other)
+                return Success(FcntlSuccess)
         }
         GetOwn -> {
             val res = fcntl_wrapper_void(fd.int(), cmd.int())
@@ -240,11 +240,11 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
                 return Success(GetFdOwn(res))
         }
         SetOwn(pid) -> {
-            val res = fcntl_wrapper_arg(fd.int(), cmd.int(), pid.int())
+            val res = fcntl_wrapper_arg(fd.int(), cmd.int(), pid)
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Other)
+                return Success(FcntlSuccess)
         }
         GetSig -> {
             val res = fcntl_wrapper_void(fd.int(), cmd.int())
@@ -258,14 +258,14 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Other)
+                return Success(FcntlSuccess)
         }
         SetLease(lease) -> {
             val res = fcntl_wrapper_arg(fd.int(), cmd.int(), lease.int())
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Other)
+                return Success(FcntlSuccess)
         }
         GetLease -> {
             val res = fcntl_wrapper_void(fd.int(), cmd.int())
@@ -279,7 +279,7 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Other)
+                return Success(FcntlSuccess)
         }
         SetPipeSize(size) -> {
             val res = fcntl_wrapper_arg(fd.int(), cmd.int(), size)
@@ -300,7 +300,7 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
             if res == -1 then
                 return Failure(errno())
             else
-                return Success(Other)
+                return Success(FcntlSuccess)
         }
         GetSeals -> {
             val res = fcntl_wrapper_void(fd.int(), cmd.int())
@@ -326,3 +326,5 @@ pub fun fcntl(fd : fileDescriptor, cmd : fcntlOp) : <exn|_e> libcResult<fcntlRes
 
 
     }
+
+
