@@ -35,6 +35,8 @@ pub val stderr = init_stderr()
 pub extern fprint(f : file, str : string) : <console,fsys> ()
     c "kk_fprint"
 
+pub extern fprintln(f : file, str : string) : <console,fsys> ()
+    c "kk_fprintln"
 
 extern fflush_wrapper(f : file) : int
     c "kk_fflush_wrapper"

@@ -210,7 +210,7 @@ pub extern exit_(status : int) : ()
 pub fun main() {
 
 
-    execvp("ls", ["ls", "-l"].vector())
+    write("hello world", STDOUT, -1)
 
     ()
 }

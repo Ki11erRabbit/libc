@@ -68,7 +68,6 @@ static inline kk_integer_t kk_fileno_wrapper(kk_integer_t fileptr, kk_context_t*
 }
 
 
-
 static inline void kk_perror(kk_string_t str, kk_context_t* _ctx) {
     kk_ssize_t str_length;
     perror(kk_string_cbuf_borrow(str, &str_length));
